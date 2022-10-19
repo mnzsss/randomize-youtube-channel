@@ -51,7 +51,7 @@ export default function Home() {
 
             <p className="max-w-md mx-auto mt-5 text-gray-200 dark:text-gray-200">
               Randomize your favorite youtube channel, for start paste channel
-              link above
+              link down
             </p>
 
             <div className="flex flex-col mt-20 space-y-3 sm:space-y-0 sm:flex-row sm:justify-center sm:-mx-2">
