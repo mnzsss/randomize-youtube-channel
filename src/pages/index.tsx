@@ -1,45 +1,22 @@
-import { shuffle } from '@/utils/shuffle';
+import { Channel } from '@/core/interfaces/Channel';
 import axios from 'axios';
 import Head from 'next/head';
 import { useCallback, useState } from 'react';
 import YouTube from 'react-youtube';
 
 export default function Home() {
-  const [ytChannel, setYTChannel] = useState(``);
+  const [ytChannelLink, setYTChannelLink] = useState(``);
   const [playlistLink, setPlaylistLink] = useState(``);
 
-  const [videos, setVideos] = useState<any[]>([]);
+  const [channel, setChannel] = useState<Channel | undefined>(undefined);
 
   const handleRandomVideo = useCallback(async () => {
-    let channelName = ``;
+    const { data } = await axios.post(`/api/random`, {
+      channel: ytChannelLink,
+    });
 
-    if (ytChannel.includes(`/channel/`)) {
-      channelName = ytChannel.split(`/channel/`)[1];
-    } else {
-      channelName = ytChannel.split(`/c/`)[1];
-    }
-
-    const apiKey = process.env.NEXT_PUBLIC_YT_API_KEY;
-
-    const { data } = await axios.get(
-      `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&part=id&type=channel&q=${channelName}&maxResults=5`,
-    );
-
-    const channelID = data?.items[0]?.id?.channelId;
-
-    const { data: videos } = await axios.get(
-      `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&part=snippet&channelId=${channelID}&maxResults=50&order=date&type=video`,
-    );
-
-    setVideos(
-      shuffle(
-        videos.items.map((video: any) => ({
-          ...video.snippet,
-          ...video.id,
-        })),
-      ),
-    );
-  }, [ytChannel]);
+    setChannel(data);
+  }, [ytChannelLink]);
 
   return (
     <>
@@ -76,7 +53,7 @@ export default function Home() {
 
             <div className="flex flex-col mt-8 space-y-3 sm:space-y-0 sm:flex-row sm:justify-center sm:-mx-2">
               <input
-                onChange={(e) => setYTChannel(e.target.value)}
+                onChange={(e) => setYTChannelLink(e.target.value)}
                 type="text"
                 className="w-full px-4 py-2 text-gray-700 bg-white border rounded-md sm:mx-2 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-indigo-400 dark:focus:border-indigo-300 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40"
                 placeholder="Youtube Channel Link"
@@ -90,16 +67,17 @@ export default function Home() {
               </button>
             </div>
 
-            {videos.length ? (
+            {channel && channel.videos.length ? (
               <div className="mt-12">
                 <YouTube
-                  videoId={videos[0].videoId}
-                  title={videos[0].title}
+                  videoId={channel.videos[0].videoId}
+                  title={channel.videos[0].title}
                   loading="lazy"
                   opts={{
                     playerVars: {
-                      // https://developers.google.com/youtube/player_parameters
-                      playlist: videos.map((video) => video.videoId).join(`,`),
+                      playlist: channel.videos
+                        .map((video) => video.videoId)
+                        .join(`,`),
                     },
                   }}
                   onReady={async (e) => {
