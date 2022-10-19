@@ -1,21 +1,24 @@
 import { Channel } from '@/core/interfaces/Channel';
-import axios from 'axios';
+import { api } from '@/services/api';
 import Head from 'next/head';
 import { useCallback, useState } from 'react';
 import YouTube from 'react-youtube';
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
   const [ytChannelLink, setYTChannelLink] = useState(``);
   const [playlistLink, setPlaylistLink] = useState(``);
 
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
 
   const handleRandomVideo = useCallback(async () => {
-    const { data } = await axios.post(`/api/random`, {
+    setLoading(true);
+    const { data } = await api.post(`/random`, {
       channel: ytChannelLink,
     });
 
     setChannel(data);
+    setLoading(false);
   }, [ytChannelLink]);
 
   return (
@@ -39,7 +42,7 @@ export default function Home() {
         />
       </Head>
 
-      <div className="w-screen h-screen flex items-center justify-center bg-white dark:bg-zinc-900">
+      <div className="overflow-hidden w-screen min-h-screen flex items-center justify-center bg-white dark:bg-zinc-900">
         <section>
           <div className="max-w-3xl px-6 py-16 mx-auto text-center">
             <h1 className="gradient text-6xl font-extrabold ">
@@ -51,7 +54,7 @@ export default function Home() {
               link above
             </p>
 
-            <div className="flex flex-col mt-8 space-y-3 sm:space-y-0 sm:flex-row sm:justify-center sm:-mx-2">
+            <div className="flex flex-col mt-20 space-y-3 sm:space-y-0 sm:flex-row sm:justify-center sm:-mx-2">
               <input
                 onChange={(e) => setYTChannelLink(e.target.value)}
                 type="text"
@@ -67,8 +70,12 @@ export default function Home() {
               </button>
             </div>
 
-            {channel && channel.videos.length ? (
-              <div className="mt-12">
+            {loading ? (
+              <p className="text-lg font-bold text-indigo-50 mt-14">
+                Randomizing...
+              </p>
+            ) : channel && channel.videos.length ? (
+              <>
                 <YouTube
                   videoId={channel.videos[0].videoId}
                   title={channel.videos[0].title}
@@ -83,18 +90,19 @@ export default function Home() {
                   onReady={async (e) => {
                     setPlaylistLink(e.target.playerInfo.videoUrl);
                   }}
+                  className="mt-12 w-full"
+                  iframeClassName="w-full"
                 />
-              </div>
+                <a
+                  href={playlistLink}
+                  target="_blank"
+                  className="block max-w-xs mx-auto mt-8 px-4 py-4 text-lg font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-red-700 rounded-md hover:bg-red-600 focus:outline-none focus:bg-red-600"
+                  rel="noreferrer"
+                >
+                  Play on Youtube
+                </a>
+              </>
             ) : null}
-
-            <a
-              href={playlistLink}
-              target="_blank"
-              className="block max-w-xs mx-auto mt-8 px-4 py-4 text-lg font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-red-700 rounded-md hover:bg-red-600 focus:outline-none focus:bg-red-600"
-              rel="noreferrer"
-            >
-              Play on Youtube
-            </a>
           </div>
         </section>
       </div>
