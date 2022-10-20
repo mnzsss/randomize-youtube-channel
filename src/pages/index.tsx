@@ -12,13 +12,18 @@ export default function Home() {
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
 
   const handleRandomVideo = useCallback(async () => {
-    setLoading(true);
-    const { data } = await api.post(`/random`, {
-      channel: ytChannelLink,
-    });
+    try {
+      setLoading(true);
+      const { data } = await api.post(`/random`, {
+        channel: ytChannelLink,
+      });
 
-    setChannel(data);
-    setLoading(false);
+      setChannel(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [ytChannelLink]);
 
   return (
