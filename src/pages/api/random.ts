@@ -68,6 +68,8 @@ export default async function handler(
 
     res.status(200).json(channel);
   } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return res.status(500).json({ message: e.message });
   }
 }
